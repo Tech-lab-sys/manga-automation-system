@@ -1,67 +1,104 @@
 import os
+from typing import List
 from PIL import Image
+from scripts.utils import logger, config
 
+# Attempt to load ReportLab for high-quality PDF generation
 try:
     from reportlab.pdfgen import canvas
     from reportlab.lib.pagesizes import letter
     REPORTLAB_AVAILABLE = True
 except ImportError:
     REPORTLAB_AVAILABLE = False
+    logger.warning("ReportLab not found. Will fallback to PIL for PDF compilation.")
 
-def compile_pdf(output_filename, input_dir):
-    print(f"Compiling PDF from images in {input_dir}...")
+class PDFCompiler:
+    """Class responsible for compiling a series of images into a single PDF document."""
 
-    # Create output dir if it doesn't exist
-    os.makedirs(os.path.dirname(output_filename), exist_ok=True)
+    def __init__(self, output_filename: str = "output/manga.pdf", input_dir: str = "output/pages"):
+        self.output_filename = output_filename
+        self.input_dir = input_dir
+        self.use_reportlab = REPORTLAB_AVAILABLE
 
-    if not os.path.exists(input_dir):
-        print(f"Input directory {input_dir} does not exist.")
-        return
+        # Ensure output directory exists
+        os.makedirs(os.path.dirname(self.output_filename), exist_ok=True)
+        logger.info(f"Initialized PDFCompiler. Output: {self.output_filename}, Input: {self.input_dir}")
 
-    # Look in the processed directory first, then the base pages directory
-    processed_dir = os.path.join(input_dir, "processed")
-    target_dir = processed_dir if os.path.exists(processed_dir) and os.listdir(processed_dir) else input_dir
+    def _get_images_to_compile(self) -> List[str]:
+        """Determine which directory to read images from and return the list of image files."""
+        if not os.path.exists(self.input_dir):
+            logger.error(f"Input directory {self.input_dir} does not exist.")
+            return []
 
-    images = [f for f in os.listdir(target_dir) if f.endswith(('.png', '.jpg', '.jpeg'))]
-    images.sort()
+        # Prefer processed images (with detected bubbles) if available
+        processed_dir = os.path.join(self.input_dir, "processed")
+        target_dir = processed_dir if os.path.exists(processed_dir) and os.listdir(processed_dir) else self.input_dir
 
-    if not images:
-        print(f"No images found in {target_dir} to compile.")
-        return
+        logger.info(f"Sourcing images from directory: {target_dir}")
+        images = [f for f in os.listdir(target_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+        images.sort() # Ensure chronological order
 
-    if not REPORTLAB_AVAILABLE:
-        print("ReportLab is not installed. Using PIL to save PDF...")
+        return [os.path.join(target_dir, img) for img in images]
+
+    def _compile_with_pil(self, image_paths: List[str]) -> bool:
+        """Fallback method to compile PDF using Python Imaging Library (PIL)."""
+        logger.info("Using PIL to compile PDF...")
         try:
             img_list = []
-            for img_name in images:
-                img_path = os.path.join(target_dir, img_name)
-                img = Image.open(img_path)
+            for path in image_paths:
+                img = Image.open(path)
                 if img.mode != 'RGB':
                     img = img.convert('RGB')
                 img_list.append(img)
 
             if img_list:
-                img_list[0].save(output_filename, save_all=True, append_images=img_list[1:])
-                print(f"PDF compiled and saved to {output_filename}")
+                img_list[0].save(self.output_filename, save_all=True, append_images=img_list[1:])
+                logger.info(f"PDF successfully compiled via PIL and saved to {self.output_filename}")
+                return True
         except Exception as e:
-            print(f"Error saving PDF with PIL: {e}")
-        return
+            logger.error(f"Error saving PDF with PIL: {e}")
+        return False
 
-    try:
-        c = canvas.Canvas(output_filename, pagesize=letter)
-        page_width, page_height = letter
+    def _compile_with_reportlab(self, image_paths: List[str]) -> bool:
+        """Primary method to compile PDF using ReportLab for better control."""
+        logger.info("Using ReportLab to compile PDF...")
+        try:
+            c = canvas.Canvas(self.output_filename, pagesize=letter)
+            page_width, page_height = letter
 
-        for img_name in images:
-            img_path = os.path.join(target_dir, img_name)
-            # We want to fill the page while maintaining aspect ratio, or simply stretch to fit
-            # For simplicity, let's stretch to fit the letter size
-            c.drawImage(img_path, 0, 0, width=page_width, height=page_height)
-            c.showPage()
+            for path in image_paths:
+                c.drawImage(path, 0, 0, width=page_width, height=page_height)
+                c.showPage()
 
-        c.save()
-        print(f"Real PDF compiled and saved to {output_filename}")
-    except Exception as e:
-        print(f"Error creating PDF with ReportLab: {e}")
+            c.save()
+            logger.info(f"PDF successfully compiled via ReportLab and saved to {self.output_filename}")
+            return True
+        except Exception as e:
+            logger.error(f"Error creating PDF with ReportLab: {e}")
+            return False
+
+    def compile(self) -> None:
+        """Orchestrates the PDF compilation process."""
+        image_paths = self._get_images_to_compile()
+
+        if not image_paths:
+            logger.warning(f"No valid images found to compile. Aborting PDF generation.")
+            return
+
+        logger.info(f"Found {len(image_paths)} images to compile into PDF.")
+
+        success = False
+        if self.use_reportlab:
+            success = self._compile_with_reportlab(image_paths)
+
+        # If ReportLab fails or is unavailable, fallback to PIL
+        if not success:
+            logger.info("Attempting compilation using PIL fallback...")
+            success = self._compile_with_pil(image_paths)
+
+        if not success:
+            logger.error("All PDF compilation methods failed.")
 
 if __name__ == "__main__":
-    compile_pdf("output/manga.pdf", "./output/pages")
+    compiler = PDFCompiler()
+    compiler.compile()
