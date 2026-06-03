@@ -1,0 +1,95 @@
+{
+  "name": "Manga Automation Workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "1",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "command": "python scripts/generate_pages.py"
+      },
+      "id": "2",
+      "name": "Generate Pages",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "command": "python scripts/bubble_detector.py"
+      },
+      "id": "3",
+      "name": "Detect Bubbles",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "command": "python scripts/pdf_compiler.py"
+      },
+      "id": "4",
+      "name": "Compile PDF",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        850,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Generate Pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Pages": {
+      "main": [
+        [
+          {
+            "node": "Detect Bubbles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect Bubbles": {
+      "main": [
+        [
+          {
+            "node": "Compile PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f7ed9ab8-050c-43f1-b847-a8a252bc0cb5"
+}
