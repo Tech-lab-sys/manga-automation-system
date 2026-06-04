@@ -1,0 +1,21 @@
+# Manga Automation System Configuration
+
+# General
+project_name: "manga-automation-system"
+output_dir: "./output"
+models_dir: "./models"
+log_level: "INFO"
+
+# AI Models & Services
+models:
+  generation: "pollinations"
+  speech_detection: "yolov8"
+
+# Workflows
+workflow:
+  n8n_enabled: true
+
+# Database Configuration
+database:
+  type: "nocodb"
+  table_name: "manga_generation"
