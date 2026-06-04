@@ -1,6 +1,8 @@
 import os
 import cv2
+import textwrap
 from typing import List, Tuple
+from PIL import Image, ImageDraw, ImageFont
 from scripts.utils import logger, config
 
 class BubbleDetector:
@@ -35,6 +37,41 @@ class BubbleDetector:
             logger.error(f"Failed to process image array during detection: {e}")
             return []
 
+    def _draw_bubble_with_text(self, img_pil: Image.Image, box: Tuple[int, int, int, int], text: str = "Lorem ipsum..."):
+        """Draws a nice comic-style bubble and wraps text inside it using PIL."""
+        draw = ImageDraw.Draw(img_pil)
+        x, y, w, h = box
+
+        # Draw white bubble with black border
+        padding = 10
+        bubble_box = [x - padding, y - padding, x + w + padding, y + h + padding]
+        draw.ellipse(bubble_box, fill="white", outline="black", width=3)
+
+        # Load a default font (fallback to standard if TTF not available)
+        try:
+            # Try to load a nice font, fallback to default
+            font = ImageFont.truetype("arial.ttf", 16)
+        except IOError:
+            font = ImageFont.load_default()
+
+        # Wrap text
+        char_width = 8 # rough estimate
+        max_chars_per_line = max(10, w // char_width)
+        wrapped_lines = textwrap.wrap(text, width=max_chars_per_line)
+
+        # Calculate vertical start to center text
+        total_text_height = len(wrapped_lines) * 20 # 20px per line approx
+        text_y = y + (h - total_text_height) // 2
+
+        # Draw each line
+        for line in wrapped_lines:
+            # Calculate horizontal start to center text
+            # Depending on Pillow version, textlength or textsize is used. Using basic approach.
+            draw.text((x, text_y), line, fill="black", font=font)
+            text_y += 20
+
+        return img_pil
+
     def process_directory(self) -> None:
         """Scans the input directory and processes all images found."""
         logger.info(f"Scanning pages in {self.input_dir}...")
@@ -61,14 +98,21 @@ class BubbleDetector:
                 bubbles = self._detect_bubbles_in_image(img)
                 logger.debug(f"Found {len(bubbles)} potential bubbles in {page}.")
 
-                # Draw bounding boxes and mock text for visualization
+                # Convert to PIL for drawing nice UI
+                img_pil = Image.open(img_path).convert("RGB")
+
+                # Fallback: if no bubbles detected, artificially place one
+                if not bubbles:
+                    logger.info("No bubbles detected. Adding a fallback bubble.")
+                    img_w, img_h = img_pil.size
+                    bubbles = [(img_w // 2 - 50, 50, 100, 50)]
+
                 for (x, y, w, h) in bubbles:
-                    cv2.rectangle(img, (x, y), (x+w, y+h), (0, 0, 255), 2)
-                    cv2.putText(img, "Text", (x+10, y+h//2), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
+                    self._draw_bubble_with_text(img_pil, (x, y, w, h), "Ah! What is this incredible power?!")
 
                 out_path = os.path.join(self.output_dir, page)
-                cv2.imwrite(out_path, img)
-                logger.info(f"Processed {page} saved to {out_path} with {len(bubbles)} detected bubbles.")
+                img_pil.save(out_path)
+                logger.info(f"Processed {page} saved to {out_path} with {len(bubbles)} rendered bubbles.")
 
             except Exception as e:
                 logger.error(f"Error processing {page}: {e}")

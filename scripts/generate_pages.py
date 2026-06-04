@@ -32,7 +32,7 @@ class PageGenerator:
         for i in range(1, num_pages + 1):
             logger.info(f"Generating page {i}/{num_pages}...")
 
-            prompt = f"manga page, {story}, scene {i}, black and white, lineart, professional comic book style, highly detailed"
+            prompt = f"masterpiece, best quality, monochrome, greyscale, screentone, manga page layout, multiple panels, black and white comic, {story}, scene {i}, intricate details, highly detailed lineart"
             encoded_prompt = urllib.parse.quote(prompt)
             url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=768&height=1024&nologo=true"
 

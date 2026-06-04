@@ -60,14 +60,31 @@ class PDFCompiler:
         return False
 
     def _compile_with_reportlab(self, image_paths: List[str]) -> bool:
-        """Primary method to compile PDF using ReportLab for better control."""
+        """Primary method to compile PDF using ReportLab with preserved aspect ratios."""
         logger.info("Using ReportLab to compile PDF...")
         try:
             c = canvas.Canvas(self.output_filename, pagesize=letter)
             page_width, page_height = letter
 
             for path in image_paths:
-                c.drawImage(path, 0, 0, width=page_width, height=page_height)
+                # Open image with PIL to get original dimensions
+                with Image.open(path) as img:
+                    img_width, img_height = img.size
+
+                # Calculate scaling factor to fit within page while maintaining aspect ratio
+                width_ratio = page_width / img_width
+                height_ratio = page_height / img_height
+                scale = min(width_ratio, height_ratio)
+
+                new_width = img_width * scale
+                new_height = img_height * scale
+
+                # Calculate centering offsets
+                x_offset = (page_width - new_width) / 2
+                y_offset = (page_height - new_height) / 2
+
+                # Draw the image
+                c.drawImage(path, x_offset, y_offset, width=new_width, height=new_height)
                 c.showPage()
 
             c.save()
