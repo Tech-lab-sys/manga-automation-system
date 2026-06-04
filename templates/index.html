@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manga Automation Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 3px solid #3b82f6;
+            width: 20px;
+            height: 20px;
+            -webkit-animation: spin 1s linear infinite; /* Safari */
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="bg-indigo-600 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-3">
+                    <i class="fa-solid fa-book-journal-whills text-2xl"></i>
+                    <span class="font-bold text-xl tracking-tight">Manga Automation Studio</span>
+                </div>
+                <div class="text-sm font-medium opacity-80">Enterprise Edition</div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+            <!-- Left Column: Controls -->
+            <div class="space-y-6">
+
+                <!-- Character Design Card -->
+                <div class="glass-panel rounded-xl p-6 transition-transform hover:-translate-y-1 duration-300">
+                    <h2 class="text-xl font-bold mb-4 text-indigo-700 flex items-center">
+                        <i class="fa-solid fa-user-astronaut mr-2"></i> 1. Design Character
+                    </h2>
+                    <form id="character-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Character Name</label>
+                            <input type="text" name="name" id="char-name" required class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition" placeholder="e.g. Kenji">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <textarea name="description" id="char-desc" rows="2" required class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition" placeholder="e.g. Spiky black hair, intense eyes, wearing a tech-jacket"></textarea>
+                        </div>
+                        <button type="submit" id="btn-char" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition shadow-md">
+                            Generate Character
+                        </button>
+                    </form>
+                    <div id="char-result" class="mt-4 hidden"></div>
+                </div>
+
+                <!-- Page Generation Card -->
+                <div class="glass-panel rounded-xl p-6 transition-transform hover:-translate-y-1 duration-300">
+                    <h2 class="text-xl font-bold mb-4 text-indigo-700 flex items-center">
+                        <i class="fa-solid fa-images mr-2"></i> 2. Generate Pages
+                    </h2>
+                    <form id="pages-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Story / Scene Prompt</label>
+                            <textarea name="story" id="page-story" rows="3" required class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition" placeholder="e.g. Kenji discovers a glowing artifact in a cyberpunk alleyway..."></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Number of Pages</label>
+                            <input type="number" name="num_pages" id="page-count" min="1" max="10" value="2" required class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition">
+                        </div>
+                        <button type="submit" id="btn-pages" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition shadow-md">
+                            Generate Pages
+                        </button>
+                    </form>
+                    <div id="pages-result" class="mt-4 hidden text-sm font-medium text-green-600 bg-green-50 p-3 rounded-lg border border-green-200"></div>
+                </div>
+
+                <!-- Pipeline Card -->
+                <div class="glass-panel rounded-xl p-6 transition-transform hover:-translate-y-1 duration-300">
+                    <h2 class="text-xl font-bold mb-4 text-indigo-700 flex items-center">
+                        <i class="fa-solid fa-gears mr-2"></i> 3. Processing Pipeline
+                    </h2>
+                    <p class="text-sm text-gray-600 mb-4">Run the background pipeline to detect speech bubbles, place text, and compile the final PDF.</p>
+                    <button id="btn-pipeline" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-lg transition shadow-md flex justify-center items-center">
+                        <i class="fa-solid fa-play mr-2"></i> Run Pipeline (Bubbles & PDF)
+                    </button>
+                    <div id="pipeline-result" class="mt-4 hidden text-sm font-medium text-blue-600 bg-blue-50 p-3 rounded-lg border border-blue-200"></div>
+
+                    <div class="mt-4 text-center">
+                        <a href="/output/manga.pdf" target="_blank" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium underline">
+                            <i class="fa-solid fa-file-pdf"></i> View Compiled PDF
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column: Gallery/Preview -->
+            <div class="glass-panel rounded-xl p-6 flex flex-col">
+                <h2 class="text-xl font-bold mb-4 text-gray-800 border-b pb-2 flex justify-between items-center">
+                    <span><i class="fa-solid fa-eye mr-2"></i> Live Preview</span>
+                    <span class="text-xs font-normal bg-gray-200 text-gray-600 px-2 py-1 rounded-full">Gallery</span>
+                </h2>
+
+                <div id="gallery" class="flex-grow bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 p-4 flex flex-col items-center justify-center overflow-y-auto min-h-[500px]">
+                    <div id="gallery-placeholder" class="text-gray-400 text-center">
+                        <i class="fa-regular fa-image text-4xl mb-2"></i>
+                        <p>Generated assets will appear here</p>
+                    </div>
+                    <!-- Images will be injected here -->
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-gray-400 py-6 text-center text-sm">
+        <p>&copy; 2026 Manga Automation System. Enterprise Edition.</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        function addImageToGallery(url, title) {
+            document.getElementById('gallery-placeholder').style.display = 'none';
+            const gallery = document.getElementById('gallery');
+
+            const container = document.createElement('div');
+            container.className = 'w-full mb-6 bg-white p-3 rounded-lg shadow-sm border border-gray-200';
+
+            const img = document.createElement('img');
+            // Adding a timestamp to bypass cache if image updates
+            img.src = url + "?t=" + new Date().getTime();
+            img.className = 'w-full h-auto rounded-md border border-gray-100';
+            img.alt = title;
+
+            const label = document.createElement('p');
+            label.className = 'text-center text-xs font-medium text-gray-500 mt-2';
+            label.textContent = title;
+
+            container.appendChild(img);
+            container.appendChild(label);
+            gallery.prepend(container); // Add to top
+        }
+
+        // Character Form Submit
+        document.getElementById('character-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-char');
+            const originalText = btn.innerText;
+            btn.innerHTML = '<span class="loader"></span> Generating...';
+            btn.disabled = true;
+
+            const formData = new FormData(e.target);
+            try {
+                const response = await fetch('/api/character/design', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    addImageToGallery(result.image_url, formData.get('name') + ' Concept');
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                alert('Error generating character.');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+
+        // Pages Form Submit
+        document.getElementById('pages-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-pages');
+            const resultDiv = document.getElementById('pages-result');
+            const originalText = btn.innerText;
+            btn.innerHTML = '<span class="loader"></span> Generating...';
+            btn.disabled = true;
+            resultDiv.classList.add('hidden');
+
+            const formData = new FormData(e.target);
+            try {
+                const response = await fetch('/api/pages/generate', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    resultDiv.innerHTML = '<i class="fa-solid fa-check-circle"></i> ' + result.message;
+                    resultDiv.classList.remove('hidden');
+
+                    result.image_urls.forEach((url, idx) => {
+                        addImageToGallery(url, `Generated Page ${idx+1}`);
+                    });
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                alert('Error generating pages.');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+
+        // Pipeline Button Click
+        document.getElementById('btn-pipeline').addEventListener('click', async () => {
+            const btn = document.getElementById('btn-pipeline');
+            const resultDiv = document.getElementById('pipeline-result');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loader"></span> Processing...';
+            resultDiv.classList.add('hidden');
+
+            try {
+                const response = await fetch('/api/pipeline/process', { method: 'POST' });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    resultDiv.innerHTML = '<i class="fa-solid fa-info-circle"></i> ' + result.message + ' Check server logs for progress.';
+                    resultDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                alert('Error starting pipeline.');
+            } finally {
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="fa-solid fa-play mr-2"></i> Run Pipeline (Bubbles & PDF)';
+                    btn.disabled = false;
+                }, 2000); // Reset button shortly after starting background task
+            }
+        });
+    </script>
+</body>
+</html>
