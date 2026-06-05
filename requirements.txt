@@ -1,5 +1,4 @@
 # Core Dependencies
-python>=3.8,<4.0
 
 # AI & ML
 torch>=2.0.0
@@ -65,3 +64,4 @@ mypy>=1.5.0
 
 # Optional: ComfyUI Integration
 # comfy-cli>=0.1.0  # Uncomment if using local ComfyUI
+python-multipart>=0.0.9

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manga Automation System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto p-8 max-w-2xl">
+        <h1 class="text-4xl font-bold text-center text-indigo-600 mb-8">Manga Automation System</h1>
+
+        <div class="bg-white p-8 rounded-lg shadow-md">
+            <h2 class="text-2xl font-semibold mb-6">Generate New Manga</h2>
+
+            {% if message %}
+            <div class="mb-6 p-4 rounded {% if error %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+                <p>{{ message }}</p>
+                {% if pdf_url %}
+                <a href="{{ pdf_url }}" target="_blank" class="text-indigo-600 underline font-semibold mt-2 inline-block">Download / View PDF</a>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <form action="/generate" method="post" class="space-y-6">
+                <div>
+                    <label for="story" class="block text-sm font-medium text-gray-700">Story Concept</label>
+                    <textarea id="story" name="story" rows="4" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="A brave hero fights the demon king..." required></textarea>
+                </div>
+
+                <div>
+                    <label for="pages" class="block text-sm font-medium text-gray-700">Number of Pages</label>
+                    <input type="number" id="pages" name="pages" min="1" max="10" value="1" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required>
+                </div>
+
+                <div>
+                    <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Generate Manga
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
