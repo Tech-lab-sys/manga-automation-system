@@ -1,0 +1,3 @@
+## 2024-06-27 - Enhance Jinja2 Form Generation Accessibility
+**Learning:** For server-rendered forms (like FastAPI returning Jinja templates) that process long-running tasks synchronously without Javascript frameworks, a simple vanilla JS `onsubmit` handler disabling the submit button and showing a spinner prevents double-submissions. Furthermore, adding dynamic `role="alert"` (for errors) and `role="status"` (for success) around Jinja blocks ensures screen readers immediately announce the newly rendered page results after a postback.
+**Action:** Always include inline JS loading states for long-running synchronous form submits and wrap Jinja conditional feedback blocks in appropriate ARIA live region roles to improve the UX and accessibility.
