@@ -1,0 +1,4 @@
+## 2025-06-29 - [Fix pip installation constraint & Add Dependabot for Security]
+**Vulnerability:** Outdated packages in requirements.txt without automatic update scanning (dependabot missing). The pip installation itself fails due to `python>=3.8,<4.0` in `requirements.txt`.
+**Learning:** `python` is not a valid PyPI package that can be installed this way. This failure state blocks automated scanners and any continuous integration from resolving dependencies or finding security flaws. Furthermore, not using a vulnerability scanner ensures the use of stale/vulnerable components.
+**Prevention:** Remove `python` requirement declarations from requirements.txt (manage python versions via CI/CD matrix or virtual environments instead). Add Dependabot or other automated dependency update scanning tools to maintain the security posture of the dependencies automatically.
