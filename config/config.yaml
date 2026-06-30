@@ -1,0 +1,11 @@
+paths:
+  output: ./output
+  characters: ./characters
+  models: ./models
+
+api:
+  pollinations: https://image.pollinations.ai/prompt/
+
+generation:
+  default_width: 800
+  default_height: 1200
