@@ -1,0 +1,19 @@
+{
+  "provider": {
+    "my-llm": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "My LLM",
+      "options": {
+        "baseURL": "https://ollama.dialogblitz.de/v1",
+        "apiKey": "{env:CUSTOM_MY_LLM_API_KEY}"
+      },
+      "models": {
+        "qwen3.5:9b": {
+          "id": "qwen3.5:9b",
+          "name": "Qwen 3.5 9b (Lokal)",
+          "family": "my-llm"
+        }
+      }
+    }
+  }
+}
