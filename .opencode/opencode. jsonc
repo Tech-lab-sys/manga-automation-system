@@ -13,7 +13,10 @@
           "name": "Qwen 3.5 9b (Lokal)",
           "family": "my-llm"
         }
-      }
+      "qwen2.5-coder:7b": {
+          "id": "qwen2.5-coder:7b",
+          "name": "Qwen 2.5 Coder (Lokal)",
+          "family": "my-llm"}
     }
   }
 }
